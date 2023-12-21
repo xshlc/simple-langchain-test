@@ -1,0 +1,4 @@
+Gemini Pro is a Large Language Model was made by GoogleDeepMind
+Gemini can be either a star sign or a name of a series of language models
+A Language model is trained by predicting the next token
+LLMs can easily do a variety of NLP tasks as well as text generation
