@@ -23,6 +23,10 @@ from langchain.vectorstores import Qdrant
 from langchain_experimental.pal_chain import PALChain
 from langchain.chains.llm import LLMChain
 
+import requests
+#from IPython.display import Image
+from PIL import Image
+
 # Set up dotenv (.env holds environment variable, GOOGLE_API_KEY)
 load_dotenv(override=True)
 
@@ -261,22 +265,49 @@ genai.configure(api_key=gemini_api_key)
 # result4 = chain.invoke({"question": "Who made Gemini Pro?"})
 # print(result4)
 
-## PAL Chain Example
-def main():
-    # PAL Chain
-    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0)
-    pal_chain = PALChain.from_math_prompt(model, verbose=True)
+# ## PAL Chain Example
+# def main():
+#     # PAL Chain
+#     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0)
+#     pal_chain = PALChain.from_math_prompt(model, verbose=True)
+#
+#     # question1 = "The cafeteria had 23 apples. \
+#     # If they used 20 for lunch and bought 6 more,\
+#     # how many apples do they have?"
+#     # res1 = pal_chain.invoke(question1)
+#     # print(res1)
+#
+#     question2 = "If you wake up at 7:00 a.m. and it takes you 1 hour and 30 minutes to get ready \
+#      and walk to school, at what time will you get to school?"
+#     res2 = pal_chain.invoke(question2)
+#     print(res2)
+#
+# if __name__ == '__main__':
+#     main()
 
-    # question1 = "The cafeteria had 23 apples. \
-    # If they used 20 for lunch and bought 6 more,\
-    # how many apples do they have?"
-    # res1 = pal_chain.invoke(question1)
-    # print(res1)
+## Multi Modal
+image_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1200px-The_Earth_seen_from_Apollo_17.jpg"
+content = requests.get(image_url).content
+#Image(content,width=300) # IPython jupyter image viewer
+# Save the image to a file
+with open("image.jpg", "wb") as f:
+    f.write(content)
+# Open the image with the default image viewer
+Image.open("image.jpg").show()
 
-    question2 = "If you wake up at 7:00 a.m. and it takes you 1 hour and 30 minutes to get ready \
-     and walk to school, at what time will you get to school?"
-    res2 = pal_chain.invoke(question2)
-    print(res2)
+llm = ChatGoogleGenerativeAI(model="gemini-pro-vision")
 
-if __name__ == '__main__':
-    main()
+message = HumanMessage(
+    content=[
+        {
+            "type": "text",
+            "text": "What's in this image and who lives there?",
+        },  # You can optionally provide text parts
+        {
+            "type": "image_url",
+            "image_url": image_url
+         },
+    ]
+)
+
+print(llm.invoke([message]))
