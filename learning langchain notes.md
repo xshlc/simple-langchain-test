@@ -773,3 +773,32 @@ https://github.com/langchain-ai/langchain/issues/12916
 - suggested fix: 
 	- `pip install pydantic==1.10.8 `
 	- `pip install docarray==0.32.1 `
+
+# Similarity search
+https://www.pinecone.io/learn/what-is-similarity-search/
+
+### Qdrant
+https://python.langchain.com/docs/integrations/vectorstores/qdrant
+#### Local Mode
+##### In-memory
+- quick experiments
+- in-memory -> the data "gets lost when the client is destroyed - usually at the end of your script/notebook"
+```python
+qdrant = Qdrant.from_documents(
+    docs,
+    embeddings,
+    location=":memory:",  # Local mode with in-memory storage only
+    collection_name="my_documents",
+)
+```
+
+##### On-disk
+- "without using the Qdrant server, may also store your vectors on disk so they’re persisted between runs"
+```python
+qdrant = Qdrant.from_documents(
+    docs,
+    embeddings,
+    path="/tmp/local_qdrant",
+    collection_name="my_documents",
+)
+```

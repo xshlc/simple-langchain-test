@@ -21,6 +21,8 @@ from langchain.vectorstores import DocArrayInMemorySearch
 
 from langchain.schema.runnable import RunnableMap
 
+from langchain.vectorstores import Qdrant
+
 import numpy as np
 
 # Set up dotenv (.env holds environment variable, GOOGLE_API_KEY)
@@ -136,11 +138,11 @@ print(result)
 # pip install docarray (requirement already satisfied)
 # DOES NOT WORK
 
-# output_parser = StrOutputParser()
-# model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
-# # Create embeddings model
-# embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-
+output_parser = StrOutputParser()
+model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
+# Create embeddings model
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+#
 # vector = embeddings.embed_query("hello, world!")
 # print(vector[:5])
 #
@@ -217,3 +219,42 @@ print(result)
 # chain.invoke({"question": "Who made Gemini Pro?"})
 
 
+# Basic RAG Search (WORKING)
+loader = TextLoader("./minidocs-input.txt")
+documents = loader.load()
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+docs = text_splitter.split_documents(documents)
+# in-memory
+qdrant = Qdrant.from_documents(
+    docs,
+    embeddings,
+    location=":memory:",  # Local mode with in-memory storage only
+    collection_name="my_documents",
+)
+# query = "What is Gemini"
+# found_docs = qdrant.similarity_search(query)
+# print(found_docs[0].page_content)
+
+retriever = qdrant.as_retriever()
+result1 = retriever.get_relevant_documents("what is Gemini?")
+print(result1)
+result2 = retriever.get_relevant_documents("what is gemini pro?")
+print(result2)
+template = """Answer the question a a full sentence, based only on the following context:
+{context}
+
+Return you answer in three back ticks
+
+Question: {question}
+"""
+prompt = ChatPromptTemplate.from_template(template)
+
+result3 = retriever.get_relevant_documents("Who made Gemini Pro?")
+print(result3)
+chain = RunnableMap({
+    "context": lambda x: retriever.get_relevant_documents(x["question"]),
+    "question": lambda x: x["question"]
+}) | prompt | model | output_parser
+
+result4 = chain.invoke({"question": "Who made Gemini Pro?"})
+print(result4)
