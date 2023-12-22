@@ -35,3 +35,6 @@ pip install "docarray[hnswlib]"
 #### Qdrant (WORKS)
 pip install qdrant-client
 https://python.langchain.com/docs/integrations/vectorstores/qdrant 
+
+### Images 
+pip install pillow

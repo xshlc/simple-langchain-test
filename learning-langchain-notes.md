@@ -895,3 +895,44 @@ def main():
 if __name__ == '__main__':  
     main()
 ```
+
+#### Multi Modal
+```python
+import requests
+from IPython.display import Image
+
+from langchain_core.messages import HumanMessage # should already exist
+from langchain_google_genai import ChatGoogleGenerativeAI # should already exist
+```
+
+```python
+image_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1200px-The_Earth_seen_from_Apollo_17.jpg"
+content = requests.get(image_url).content
+#Image(content,width=300) # jupyter IPython display image
+
+# Save the image to a file  
+with open("image.jpg", "wb") as f:  
+    f.write(content)  
+# Open the image with the default image viewer  
+Image.open("image.jpg").show()
+```
+
+```python
+llm = ChatGoogleGenerativeAI(model="gemini-pro-vision")
+
+# example
+message = HumanMessage(
+    content=[
+        {
+            "type": "text",
+            "text": "What's in this image and who lives there?",
+        },  # You can optionally provide text parts
+        {
+            "type": "image_url",
+            "image_url": image_url
+         },
+    ]
+)
+
+llm.invoke([message])
+```
