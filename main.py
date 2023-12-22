@@ -3,8 +3,8 @@ import pathlib
 import textwrap
 
 import google.generativeai as genai
-from IPython.display import display
-from IPython.display import Markdown
+from IPython.display import display # for jupyter
+from IPython.display import Markdown # for jupyter
 
 from dotenv import load_dotenv
 from langchain.text_splitter import CharacterTextSplitter
@@ -15,26 +15,23 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
-
-from langchain.vectorstores import DocArrayInMemorySearch
+#from langchain.vectorstores import DocArrayInMemorySearch
 #from langchain.vectorstores.docarray.in_memory import DocArrayInMemorySearch
-
 from langchain.schema.runnable import RunnableMap
-
 from langchain.vectorstores import Qdrant
 
-import numpy as np
+from langchain_experimental.pal_chain import PALChain
+from langchain.chains.llm import LLMChain
 
 # Set up dotenv (.env holds environment variable, GOOGLE_API_KEY)
 load_dotenv(override=True)
 
 # Set up API auth
 gemini_api_key = os.getenv('GOOGLE_API_KEY')
-
 genai.configure(api_key=gemini_api_key)
 
 ######### NO LANGCHAIN - SIMPLE API TEST #########
-#Set up the model
+# # Set up the model
 
 # ## Configs
 # generation_config = {
@@ -99,35 +96,35 @@ genai.configure(api_key=gemini_api_key)
 # ex: if 0.0, output is purely deterministic
 #  aka output is exactly the same everytime
 
-# Basic LLM Chain
-llm = ChatGoogleGenerativeAI(model="gemini-pro",
-                             temperature=0.7)
-# Example 1
-result = llm.invoke("What is a LLM?")
-#Markdown(result.content)
-print(result.content)
+# # Basic LLM Chain
+# llm = ChatGoogleGenerativeAI(model="gemini-pro",
+#                              temperature=0.7)
+# # Example 1
+# result = llm.invoke("What is a LLM?")
+# #Markdown(result.content)
+# print(result.content)
+#
+# # Example 2
+# for chunk in llm.stream("Write a haiku about LLMs."):
+#     print(chunk.content)
+#     print("---")
 
-# Example 2
-for chunk in llm.stream("Write a haiku about LLMs."):
-    print(chunk.content)
-    print("---")
 
 
-
-# Basic Multi-chain
-model = ChatGoogleGenerativeAI(model="gemini-pro",
-                             temperature=0.7)
-prompt = ChatPromptTemplate.from_template(
-    "tell me a short joke about {topic}"
-)
-
-output_parser = StrOutputParser()
-
-chain = prompt | model | output_parser
-
-topic_str = "programming"
-result = chain.invoke({"topic": topic_str})
-print(result)
+# # Basic Multi-chain
+# model = ChatGoogleGenerativeAI(model="gemini-pro",
+#                              temperature=0.7)
+# prompt = ChatPromptTemplate.from_template(
+#     "tell me a short joke about {topic}"
+# )
+#
+# output_parser = StrOutputParser()
+#
+# chain = prompt | model | output_parser
+#
+# topic_str = "programming"
+# result = chain.invoke({"topic": topic_str})
+# print(result)
 
 
 
@@ -138,10 +135,10 @@ print(result)
 # pip install docarray (requirement already satisfied)
 # DOES NOT WORK
 
-output_parser = StrOutputParser()
-model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
-# Create embeddings model
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+# output_parser = StrOutputParser()
+# model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
+# # Create embeddings model
+# embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 #
 # vector = embeddings.embed_query("hello, world!")
 # print(vector[:5])
@@ -219,42 +216,67 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 # chain.invoke({"question": "Who made Gemini Pro?"})
 
 
-# Basic RAG Search (WORKING)
-loader = TextLoader("./minidocs-input.txt")
-documents = loader.load()
-text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-docs = text_splitter.split_documents(documents)
-# in-memory
-qdrant = Qdrant.from_documents(
-    docs,
-    embeddings,
-    location=":memory:",  # Local mode with in-memory storage only
-    collection_name="my_documents",
-)
-# query = "What is Gemini"
-# found_docs = qdrant.similarity_search(query)
-# print(found_docs[0].page_content)
+# # Basic RAG Search (WORKING)
+# output_parser = StrOutputParser()
+# model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
+# # Create embeddings model
+# embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-retriever = qdrant.as_retriever()
-result1 = retriever.get_relevant_documents("what is Gemini?")
-print(result1)
-result2 = retriever.get_relevant_documents("what is gemini pro?")
-print(result2)
-template = """Answer the question a a full sentence, based only on the following context:
-{context}
+# loader = TextLoader("./minidocs-input.txt")
+# documents = loader.load()
+# text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+# docs = text_splitter.split_documents(documents)
+# # in-memory
+# qdrant = Qdrant.from_documents(
+#     docs,
+#     embeddings,
+#     location=":memory:",  # Local mode with in-memory storage only
+#     collection_name="my_documents",
+# )
+# # query = "What is Gemini"
+# # found_docs = qdrant.similarity_search(query)
+# # print(found_docs[0].page_content)
+#
+# retriever = qdrant.as_retriever()
+# result1 = retriever.get_relevant_documents("what is Gemini?")
+# print(result1)
+# result2 = retriever.get_relevant_documents("what is gemini pro?")
+# print(result2)
+# template = """Answer the question a a full sentence, based only on the following context:
+# {context}
+#
+# Return you answer in three back ticks
+#
+# Question: {question}
+# """
+# prompt = ChatPromptTemplate.from_template(template)
+#
+# result3 = retriever.get_relevant_documents("Who made Gemini Pro?")
+# print(result3)
+# chain = RunnableMap({
+#     "context": lambda x: retriever.get_relevant_documents(x["question"]),
+#     "question": lambda x: x["question"]
+# }) | prompt | model | output_parser
+#
+# result4 = chain.invoke({"question": "Who made Gemini Pro?"})
+# print(result4)
 
-Return you answer in three back ticks
+## PAL Chain Example
+def main():
+    # PAL Chain
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0)
+    pal_chain = PALChain.from_math_prompt(model, verbose=True)
 
-Question: {question}
-"""
-prompt = ChatPromptTemplate.from_template(template)
+    # question1 = "The cafeteria had 23 apples. \
+    # If they used 20 for lunch and bought 6 more,\
+    # how many apples do they have?"
+    # res1 = pal_chain.invoke(question1)
+    # print(res1)
 
-result3 = retriever.get_relevant_documents("Who made Gemini Pro?")
-print(result3)
-chain = RunnableMap({
-    "context": lambda x: retriever.get_relevant_documents(x["question"]),
-    "question": lambda x: x["question"]
-}) | prompt | model | output_parser
+    question2 = "If you wake up at 7:00 a.m. and it takes you 1 hour and 30 minutes to get ready \
+     and walk to school, at what time will you get to school?"
+    res2 = pal_chain.invoke(question2)
+    print(res2)
 
-result4 = chain.invoke({"question": "Who made Gemini Pro?"})
-print(result4)
+if __name__ == '__main__':
+    main()

@@ -802,3 +802,96 @@ qdrant = Qdrant.from_documents(
     collection_name="my_documents",
 )
 ```
+
+#### PAL Chaining
+```python
+from langchain_experimental.pal_chain import PALChain  
+from langchain.chains.llm import LLMChain
+```
+
+```python
+## Unsafe code
+# Does not work
+# Continue to next section of notes
+model = ChatGoogleGenerativeAI(model="gemini-pro",temperature=0)
+
+pal_chain = PALChain.from_math_prompt(model, verbose=True)
+
+question = "The cafeteria had 23 apples. \
+If they used 20 for lunch and bought 6 more,\
+how many apples do they have?"
+
+pal_chain.invoke(question)
+
+question = "If you wake up at 7:00 a.m. and it takes you 1 hour and 30 minutes to get ready \
+ and walk to school, at what time will you get to school?"
+
+pal_chain.invoke(question)
+```
+
+---
+##### PAL Chain infinite looping error
+
+See: https://docs.python.org/3/library/multiprocessing.html
+
+Explanation: 
+The error you are encountering is related to the multiprocessing module in Python. It's likely caused by the fact that the PALChain uses a Python REPL (Read-Eval-Print Loop) for its processing, and the multiprocessing module is not well-suited for use in environments where REPL is involved.
+
+Here are a few suggestions to address the issue:
+
+1. **Avoid using multiprocessing in REPL environments:**
+   Since PALChain seems to utilize a Python REPL, it's generally a good practice to avoid using multiprocessing in REPL environments. The multiprocessing module is designed for use in standalone scripts and may not work well in interactive environments.
+
+2. **Use if __name__ == '__main__': in your main script:**
+   If you are executing the PALChain code directly in a script, make sure to wrap your code in an `if __name__ == '__main__':` block. This is a common practice when using multiprocessing in Python scripts.
+
+   ```python
+   if __name__ == '__main__':
+       # Your PALChain code here
+   ```
+
+   This is necessary to prevent multiprocessing-related issues in Windows environments.
+
+3. **Check PALChain Documentation or Community:**
+   If the issue persists, check the documentation of PALChain or seek help from the community or developers. There may be specific guidelines or considerations for using PALChain in certain environments.
+
+4. **Consider Using a Different Approach:**
+   If the PALChain doesn't work well in your specific environment, consider using an alternative approach or library for your task. There might be other tools or libraries that better suit your needs.
+
+Remember to adapt these suggestions based on the specifics of your use case and the PALChain library you are working with. If you have access to the PALChain library's documentation or community, it's recommended to check for any guidelines or recommendations regarding the use of multiprocessing or REPL environments.
+
+---
+
+### Working PAL Chain
+
+Example 1:
+```python
+def main():  
+    # PAL Chain  
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0)  
+    pal_chain = PALChain.from_math_prompt(model, verbose=True)  
+    
+    question2 = "If you wake up at 7:00 a.m. and it takes you 1 hour and 30 minutes to get ready \  
+     and walk to school, at what time will you get to school?"    res2 = pal_chain.invoke(question2)  
+    print(res2)
+  
+if __name__ == '__main__':  
+    main()
+```
+
+Example 2:
+```python
+def main():  
+    # PAL Chain  
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0)  
+    pal_chain = PALChain.from_math_prompt(model, verbose=True)  
+    
+    question1 = "The cafeteria had 23 apples. \
+    If they used 20 for lunch and bought 6 more,\
+    how many apples do they have?"  
+    res1 = pal_chain.invoke(question1)
+    print(res1)
+  
+if __name__ == '__main__':  
+    main()
+```
