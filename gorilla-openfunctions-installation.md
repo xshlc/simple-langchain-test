@@ -50,3 +50,8 @@ error: metadata-generation-failed
  * Resolves pip install errors
 2. Restart PyCharm
 3. Try `pip install -r gorilla-requirements.txt` again
+
+## Local OpenFunctions
+pip install torch
+pip install transformers
+Note: torch does not work with Python 3.12. Downgrade Python to 3.11.
