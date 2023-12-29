@@ -38,3 +38,7 @@ https://python.langchain.com/docs/integrations/vectorstores/qdrant
 
 ### Images 
 pip install pillow
+
+## Gorilla OpenFunctions
+pip install -r gorilla-requirements.txt
+ * one of the requirements have a rust dependency 
